@@ -1,4 +1,4 @@
--- name: 2D Game
+-- name: \\#ffdcdc\\2D Game
 -- incompatible: romhack
 
 local forceMovementLevels = {
@@ -34,7 +34,7 @@ local function before_mario_update(m)
     stickX = stickX + stickY*0.1
     
     m.controller.stickY = stickX
-    m.controller.stickX = stickY
+    m.controller.stickX = 0
 end
 
 local function update()
