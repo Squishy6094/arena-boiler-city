@@ -5,20 +5,52 @@ local forceMovementLevels = {
     [LEVEL_BOB] = true
 }
 
+local smoothFloorHeight = nil
+local smoothHorizontal = 0
+local smoothSpeed = 15
+
 local function mario_update(m)
     if m.playerIndex ~= 0 then return end
-    if not forceMovementLevels[gNetworkPlayers[0].currLevelNum] then return end
+    if not forceMovementLevels[gNetworkPlayers[0].currLevelNum] then
+        smoothFloorHeight = nil
+        smoothHorizontal = 0
+        return
+    end
+
     m.pos.x = 0
+
+    -- Smooth Camera Movement Code
+    if smoothFloorHeight == nil then
+        smoothFloorHeight = m.pos.y - m.floorHeight
+    end
+    if smoothFloorHeight < m.pos.y - m.floorHeight then
+        smoothFloorHeight = smoothFloorHeight + smoothSpeed
+    end
+    if smoothFloorHeight > m.pos.y - m.floorHeight then
+        smoothFloorHeight = smoothFloorHeight - smoothSpeed
+    end
+
+    if smoothHorizontal < m.vel.z then
+        smoothHorizontal = smoothHorizontal + 2
+    end
+    if smoothHorizontal > m.vel.z then
+        smoothHorizontal = smoothHorizontal - 2
+    end
+
     camera_freeze()
+
     local focusPos = {
         x = m.pos.x,
-        y = m.pos.y + 120,
-        z = m.pos.z,
+        y = m.pos.y + 250 - smoothFloorHeight*0.6 + math.min(0, m.vel.y)*0.1,
+        z = m.pos.z + smoothHorizontal,
     }
     vec3f_copy(gLakituState.focus, focusPos)
-    gLakituState.pos.x = m.pos.x + 2000
-    gLakituState.pos.y = m.pos.y + 500
-    gLakituState.pos.z = m.pos.z
+    gLakituState.pos.x = m.pos.x + 1800
+    gLakituState.pos.y = m.pos.y + 400
+    gLakituState.pos.z = m.pos.z + smoothHorizontal
+
+    -- Mario Wonder type Rotation
+    m.marioObj.header.gfx.angle.y = 0x4000 + math.ceil(m.controller.stickY*0.01)
 end
 
 local function before_mario_update(m)
