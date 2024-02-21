@@ -5,9 +5,21 @@ local forceMovementLevels = {
     [LEVEL_BOB] = true
 }
 
+local rotateActs = {
+    [ACT_TURNING_AROUND] = true,
+    [ACT_SIDE_FLIP] = true,
+    [ACT_LEDGE_GRAB] = true,
+    [ACT_LEDGE_CLIMB_DOWN] = true,
+    [ACT_LEDGE_CLIMB_FAST] = true,
+    [ACT_LEDGE_CLIMB_SLOW_1] = true,
+    [ACT_LEDGE_CLIMB_SLOW_2] = true,
+}
+
 local smoothFloorHeight = nil
 local smoothHorizontal = 0
-local smoothSpeed = 15
+local smoothSpeed = 25
+local focusOffset = 0
+local faceRight = true
 
 local function mario_update(m)
     if m.playerIndex ~= 0 then return end
@@ -17,7 +29,7 @@ local function mario_update(m)
         return
     end
 
-    m.pos.x = 0
+    m.pos.z = 0
 
     -- Smooth Camera Movement Code
     if smoothFloorHeight == nil then
@@ -29,6 +41,7 @@ local function mario_update(m)
     if smoothFloorHeight > m.pos.y - m.floorHeight then
         smoothFloorHeight = smoothFloorHeight - smoothSpeed
     end
+    smoothFloorHeight = math.min(smoothFloorHeight, 1000)
 
     if smoothHorizontal < m.vel.z then
         smoothHorizontal = smoothHorizontal + 2
@@ -40,33 +53,37 @@ local function mario_update(m)
     camera_freeze()
 
     local focusPos = {
-        x = m.pos.x,
-        y = m.pos.y + 250 - smoothFloorHeight*0.6 + math.min(0, m.vel.y)*0.1,
-        z = m.pos.z + smoothHorizontal,
+        x = m.pos.x + smoothHorizontal,
+        y = m.pos.y + 250 - smoothFloorHeight*0.6,
+        z = m.pos.z,
     }
     vec3f_copy(gLakituState.focus, focusPos)
-    gLakituState.pos.x = m.pos.x + 1800
+    gLakituState.pos.x = m.pos.x + smoothHorizontal
     gLakituState.pos.y = m.pos.y + 400
-    gLakituState.pos.z = m.pos.z + smoothHorizontal
+    gLakituState.pos.z = m.pos.z + 1800
 
     -- Mario Wonder type Rotation
-    m.marioObj.header.gfx.angle.y = 0x4000 + math.ceil(m.controller.stickY*0.01)
+    if m.vel.x < 0 and not rotateActs[m.action] then
+        faceRight = true
+    end
+    if m.vel.x > 0 and not rotateActs[m.action] then
+        faceRight = false
+    end
+    if not rotateActs[m.action] then
+        if faceRight then
+            m.marioObj.header.gfx.angle.y = -0x2000
+        else
+            m.marioObj.header.gfx.angle.y = 0x2000
+        end
+    end
 end
 
 local function before_mario_update(m)
     if m.playerIndex ~= 0 then return end
-    if not forceMovementLevels[gNetworkPlayers[0].currLevelNum] then
+    if not forceMovementLevels[gNetworkPlayers[0].currLevelNum] and camera_is_frozen() then
         camera_unfreeze()
         return
     end
-    local stickX = m.controller.stickX
-    local stickY = m.controller.stickY
-
-    stickY = stickY + stickX*0.1
-    stickX = stickX + stickY*0.1
-    
-    m.controller.stickY = stickX
-    m.controller.stickX = 0
 end
 
 local function update()
