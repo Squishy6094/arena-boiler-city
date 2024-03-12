@@ -1,25 +1,35 @@
--- name: \\#ffdcdc\\2D Game
--- incompatible: romhack
+-- name: \\\\Arena - Boiler City
+
+-- register the level here
+LEVEL_ARENA_BOILER = level_register('level_arena_boiler_entry', COURSE_NONE, 'Boiler', 'boiler', 28000, 0x28, 0x28, 0x28)
+
+-- make sure we don't add the level twice
+local sAddedLevels = false
+
+function on_level_init()
+    -- make sure we don't add the level twice
+    if sAddedLevels then return end
+    sAddedLevels = true
+
+    -- make sure Arena was loaded
+    if not _G.Arena then
+        djui_popup_create("Error: the Arena gamemode wasn't loaded!", 2)
+        return
+    end
+
+    -- add the level to arena
+    _G.Arena.add_level(LEVEL_ARENA_BOILER, 'Boiler')
+end
+
+hook_event(HOOK_ON_LEVEL_INIT, on_level_init)
 
 local forceMovementLevels = {
-    [LEVEL_BOB] = true
-}
-
-local rotateActs = {
-    [ACT_TURNING_AROUND] = true,
-    [ACT_SIDE_FLIP] = true,
-    [ACT_LEDGE_GRAB] = true,
-    [ACT_LEDGE_CLIMB_DOWN] = true,
-    [ACT_LEDGE_CLIMB_FAST] = true,
-    [ACT_LEDGE_CLIMB_SLOW_1] = true,
-    [ACT_LEDGE_CLIMB_SLOW_2] = true,
+    [LEVEL_ARENA_BOILER] = true
 }
 
 local smoothFloorHeight = nil
 local smoothHorizontal = 0
 local smoothSpeed = 25
-local focusOffset = 0
-local faceRight = true
 
 local function mario_update(m)
     if m.playerIndex ~= 0 then return end
@@ -61,21 +71,7 @@ local function mario_update(m)
     gLakituState.pos.x = m.pos.x + smoothHorizontal
     gLakituState.pos.y = m.pos.y + 400
     gLakituState.pos.z = m.pos.z + 1800
-
-    -- Mario Wonder type Rotation
-    if m.vel.x < 0 and not rotateActs[m.action] then
-        faceRight = true
-    end
-    if m.vel.x > 0 and not rotateActs[m.action] then
-        faceRight = false
-    end
-    if not rotateActs[m.action] then
-        if faceRight then
-            m.marioObj.header.gfx.angle.y = -0x2000
-        else
-            m.marioObj.header.gfx.angle.y = 0x2000
-        end
-    end
+    m.faceAngle = m.controller.intendedYaw
 end
 
 local function before_mario_update(m)
@@ -86,9 +82,5 @@ local function before_mario_update(m)
     end
 end
 
-local function update()
-end
-
 hook_event(HOOK_BEFORE_MARIO_UPDATE, before_mario_update)
 hook_event(HOOK_MARIO_UPDATE, mario_update)
-hook_event(HOOK_UPDATE, update)

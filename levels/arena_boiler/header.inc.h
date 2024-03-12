@@ -1,0 +1,10 @@
+extern const GeoLayout arena_boiler_area_1_geo[];
+extern const GeoLayout arena_boiler_area_1[];
+extern const Collision arena_boiler_area_1_collision[];
+extern const MacroObject arena_boiler_area_1_macro_objs[];
+extern Lights1 arena_boiler_dl_f3dlite_material_002_lights;
+extern Vtx arena_boiler_dl_Cube_mesh_layer_1_vtx_0[24];
+extern Gfx arena_boiler_dl_Cube_mesh_layer_1_tri_0[];
+extern Gfx mat_arena_boiler_dl_f3dlite_material_002[];
+extern Gfx arena_boiler_dl_Cube_mesh_layer_1[];
+extern Gfx arena_boiler_dl_material_revert_render_settings[];
